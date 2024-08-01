@@ -9,7 +9,6 @@
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Disbursed funds (The current balance is: UGx: <span
                     id="totalFunds">{{ $total_funds }}</span>)</h6>
-            </h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -42,6 +41,8 @@
                         <input type="text" id="fundsAmount" class="form-control mb-2" placeholder="Amount">
                         <label for="reason">Reason for Disbursement:</label>
                         <input type="text" id="reason" class="form-control mb-2" placeholder="Reason">
+                        <label for="disbursementDate">Disbursement Date:</label>
+                        <input type="date" id="disbursementDate" class="form-control mb-2">
                         <button type="button" id="btnAddFunds" class="btn btn-success">Add Fund(s)</button>
                     </div>
                     <div class="form-group" id="saveSection" style="margin-top: 20px;">
@@ -164,8 +165,13 @@
                 }
                 var amount = $('#fundsAmount').val();
                 var reason = $('#reason').val();
+                var disbursementDate = $('#disbursementDate').val();
                 if (isNaN(amount) || amount <= 0) {
                     alert("Please enter a valid amount.");
+                    return;
+                }
+                if (!disbursementDate) {
+                    alert("Please enter a disbursement date.");
                     return;
                 }
 
@@ -175,10 +181,11 @@
                     if (currentAmount) {
                         $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?/, 'UGx: ' + amount));
                     } else {
-                        $(this).text(optionText + ' - UGx: ' + amount + ' (Reason: ' + reason + ')');
+                        $(this).text(optionText + ' - UGx: ' + amount + ' (Reason: ' + reason + ', Date: ' + disbursementDate + ')');
                     }
                     $(this).data('amount', amount);
                     $(this).data('reason', reason);
+                    $(this).data('disbursementDate', disbursementDate);
                 });
 
                 updateTotalFunds(amount); // Reduce the total funds by the added amount
@@ -186,6 +193,7 @@
                 alert("Funds have been added to selected beneficiaries.");
                 $('#fundsAmount').val('');
                 $('#reason').val('');
+                $('#disbursementDate').val('');
                 $('#amountSection').hide();
             });
 
@@ -200,7 +208,8 @@
                     beneficiaries.push({
                         value: $(this).val(),
                         amount: $(this).data('amount'),
-                        reason: $(this).data('reason')
+                        reason: $(this).data('reason'),
+                        disbursementDate: $(this).data('disbursementDate')
                     });
                 });
 
@@ -278,6 +287,10 @@
             }
 
             $('#lstBox2').change(checkSelectedUsers);
+
+            // Set the default value of the disbursement date to today
+            var today = new Date().toISOString().split('T')[0];
+            $('#disbursementDate').val(today);
         });
     </script>
 @endpush

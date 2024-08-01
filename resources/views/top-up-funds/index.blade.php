@@ -9,7 +9,6 @@
         <div class="card-header py-3 d-flex justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Top Up Funds List</h6>
             <!-- Button trigger modal -->
-            <!-- Button trigger modal -->
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
                 Add
             </button>
@@ -22,7 +21,7 @@
                             <th>#</th>
                             <th>Amount</th>
                             <th>Description</th>
-                            <th>Date Added</th>
+                            <th>Top Up Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -31,10 +30,9 @@
                                 <td>{{ $top_fund->id }}</td>
                                 <td>{{ $top_fund->amount}}</td>
                                 <td>{{ $top_fund->description }}</td>
-                                <td>{{ $top_fund->created_at }}</td>
+                                <td>{{ $top_fund->top_up_date }}</td>
                             </tr>
                         @endforeach
-
                     </tbody>
                 </table>
             </div>
@@ -76,13 +74,20 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="topUpDate">Top Up Date</label>
+                            <input type="date" class="form-control @error('top_up_date') is-invalid @enderror" id="topUpDate"
+                                name="top_up_date" value="{{ old('top_up_date') }}">
+                            @error('top_up_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save changes</button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
@@ -101,6 +106,10 @@
             @if ($errors->any())
                 $('#exampleModal').modal('show');
             @endif
+
+            // Set the default value of the top up date to today
+            var today = new Date().toISOString().split('T')[0];
+            $('#topUpDate').val(today);
         });
     </script>
 @endpush

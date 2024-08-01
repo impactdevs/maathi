@@ -37,6 +37,7 @@ class DistributionController extends Controller
         $save = DB::table('top_up_funds')->insert([
             'amount' => $request->amount,
             'description' => $request->description,
+            'top_up_date' => $request->top_up_date,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -85,6 +86,7 @@ class DistributionController extends Controller
                 'user_id' => $beneficiary['value'],
                 'amount' => $beneficiary['amount'],
                 'description' => $beneficiary['reason'],
+                'disbursement_date' => $beneficiary['disbursementDate'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

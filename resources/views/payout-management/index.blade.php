@@ -18,8 +18,8 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Amount</th>
-                            <th>Description</th>
-                            <th>Payout Date</th>
+                            <th>Reason</th>
+                            <th>Disbursement Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -29,7 +29,7 @@
                                 <td>{{ $payout->name }}</td>
                                 <td>{{ $payout->amount }}</td>
                                 <td>{{ $payout->description }}</td>
-                                <td>{{ $payout->created_at }}</td>
+                                <td>{{ $payout->disbursement_date }}</td>
                             </tr>
                         @endforeach
 

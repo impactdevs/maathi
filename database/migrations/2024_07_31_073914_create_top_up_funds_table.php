@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('funds_disbursement', function (Blueprint $table) {
+        Schema::create('top_up_funds', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
             $table->string('amount');
-            $table->text('description')->nullable();
+            $table->string('description')->nullable();
+            $table->string('top_up_date')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('funds_disbursement');
+        Schema::dropIfExists('top_up_funds');
     }
 };
