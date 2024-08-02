@@ -16,7 +16,8 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
+                            <th>Beneficiary Name</th>
+                            <th>Disbursed From:</th>
                             <th>Amount</th>
                             <th>Reason</th>
                             <th>Disbursement Date</th>
@@ -27,7 +28,8 @@
                             <tr>
                                 <td>{{ $payout->id }}</td>
                                 <td>{{ $payout->name }}</td>
-                                <td>{{ $payout->amount }}</td>
+                                <td>{{ $payout->account_name }}</td>
+                                <td>{{ number_format($payout->amount) }}</td>
                                 <td>{{ $payout->description }}</td>
                                 <td>{{ $payout->disbursement_date }}</td>
                             </tr>

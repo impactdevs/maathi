@@ -30,7 +30,7 @@
                             <tr>
                                 <td>{{ $top_fund->id }}</td>
                                 <td>{{ $top_fund->name }}</td>
-                                <td>{{ $top_fund->amount }}</td>
+                                <td>{{ number_format($top_fund->amount) }}/=</td>
                                 <td>{{ $top_fund->description }}</td>
                                 <td>{{ $top_fund->top_up_date }}</td>
                             </tr>

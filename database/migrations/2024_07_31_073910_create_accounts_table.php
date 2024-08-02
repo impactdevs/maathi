@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            // time stamps with deleted at
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

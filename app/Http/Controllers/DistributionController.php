@@ -21,7 +21,7 @@ class DistributionController extends Controller
      */
     public function topupfunds()
     {
-        $accounts = DB::table('accounts')->get();
+        $accounts = DB::table('accounts')->where('deleted_at', null)->get();
         $top_funds = DB::table('top_up_funds')->join('accounts', 'top_up_funds.account_id', '=', 'accounts.id')->get();
         return view('top-up-funds.index', compact('top_funds', 'accounts'));
     }
@@ -60,7 +60,7 @@ class DistributionController extends Controller
         //get the total amount of funds in the system
         $total_funds = (DB::table('top_up_funds')->sum('amount')) - (DB::table('funds_disbursement')->sum('amount'));
         // get a list of all users except the authenticated user
-        $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->get();
+        $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->where('deleted_at', null)->get();
 
         // accounts
         $accounts = DB::table('accounts')->get();
@@ -113,7 +113,13 @@ class DistributionController extends Controller
     // payout management
     public function payoutmanagement()
     {
-        $payouts = DB::table('funds_disbursement')->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
+        $payouts = DB::table('funds_disbursement')
+            ->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
+
+        //add account name to the payout data
+        foreach ($payouts as $payout) {
+            $payout->account_name = DB::table('accounts')->where('id', $payout->account_id)->value('name');
+        }
         return view('payout-management.index', compact('payouts'));
     }
 
@@ -122,8 +128,8 @@ class DistributionController extends Controller
      */
     public function accountsmanagement()
     {
-        //get accounts with their balances as the sum of top up funds minus the sum of funds disbursed
-        $accounts = DB::table('accounts')->get();
+        //get accounts exluding trashed with their balances as the sum of top up funds minus the sum of funds disbursed each account
+        $accounts = DB::table('accounts')->whereNull('deleted_at')->get();
         foreach ($accounts as $account) {
             $account->balance = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount'));
         }
@@ -151,6 +157,98 @@ class DistributionController extends Controller
         }
 
         return redirect()->route('accounts-management')->with('success', 'Account added successfully');
+    }
+
+    //delete account
+    public function deleteaccount(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required',
+        ]);
+
+        //soft delete the account by updating the deleted_at column
+        $delete = DB::table('accounts')->where('id', $request->account_id)->update([
+            'deleted_at' => now(),
+        ]);
+
+        if (!$delete) {
+            return redirect()->back()->with('error', 'Failed to delete account');
+        }
+
+        return redirect()->back()->with('success', 'Account deleted successfully');
+    }
+
+
+    //edit account
+    public function editaccount(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required',
+        ]);
+
+        $update = DB::table('accounts')->where('id', $request->account_id)->update([
+            'name' => $request->account_name,
+            'updated_at' => now(),
+        ]);
+
+        if (!$update) {
+            return redirect()->route('accounts-management')->with('error', 'Failed to update account');
+        }
+
+        return redirect()->route('accounts-management')->with('success', 'Account updated successfully');
+    }
+
+    // get account details
+    public function getaccountdetails($id)
+    {
+        // get the balance of the account
+        $balance = (DB::table('top_up_funds')->where('account_id', $id)->sum('amount')) - (DB::table('funds_disbursement')->where('account_id', $id)->sum('amount'));
+        $account = DB::table('accounts')->where('id', $id)->first();
+        $account->balance = $balance;
+        $account->top_ups = DB::table('top_up_funds')->where('account_id', $id)->orderBy('top_up_date', 'desc')->get();
+        $account->disbursements = DB::table('funds_disbursement')->where('account_id', $id)->orderBy('disbursement_date', 'desc')->get();
+        if (!$account) {
+            return response()->json(['error' => 'Account not found'], 404);
+        }
+
+        return view('accounts-management.account-details', compact('account'));
+    }
+
+    //delete beneficiary
+    public function deletebeneficiary(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required',
+        ]);
+
+        //soft delete the account by updating the deleted_at column
+        $delete = DB::table('users')->where('id', $request->user_id)->update([
+            'deleted_at' => now(),
+        ]);
+        if (!$delete) {
+            return redirect()->back()->with('error', 'Failed to delete beneficiary');
+        }
+
+        return redirect()->back()->with('success', 'Beneficiary deleted successfully');
+    }
+
+    //edit beneficiary
+    public function editbeneficiary(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+        ]);
+
+        $update = DB::table('users')->where('id', $request->id)->update([
+            'name' => $request->name,
+            'updated_at' => now(),
+        ]);
+
+        if (!$update) {
+            return redirect()->back()->with('error', 'Failed to update beneficiary');
+        }
+
+        return redirect()->back()->with('success', 'Beneficiary updated successfully');
     }
 
 

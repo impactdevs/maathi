@@ -21,6 +21,7 @@
                         <tr>
                             <th>#</th>
                             <th>Full Name</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,6 +29,18 @@
                             <tr>
                                 <td>{{ $beneficiary->id }}</td>
                                 <td>{{ $beneficiary->name }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <button type="button" class="btn btn-primary edit-beneficiary" data-toggle="modal" data-target="#edit-beneficiary" data-id="{{ $beneficiary->id }}" data-name="{{ $beneficiary->name }}">
+                                            Edit
+                                        </button>
+                                        <form method="POST" action="{{ route('delete-beneficiary') }}">
+                                            @csrf
+                                            <input type="hidden" name="user_id" value="{{ $beneficiary->id }}">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="event.preventDefault(); this.closest('form').submit();">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
 
@@ -56,7 +69,47 @@
                             <label for="amount">Full Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
                                 name="name" placeholder="Enter the Beneficiary Full Name" value="{{ old('name') }}">
-                            <small id="name" class="form-text text-muted">This should be the full name of a beneficiary</small>
+                            <small id="name" class="form-text text-muted">This should be the full name of a
+                                beneficiary</small>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- edit --}}
+        <!-- Modal -->
+        <div class="modal fade" id="edit-beneficiary" tabindex="-1" role="dialog" aria-labelledby="edit-beneficiary"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Top up Funds</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="/edit-beneficiary" method="POST" id="edit-beneficiary-form">
+                    <div class="modal-body">
+                        @method('POST')
+                        @csrf
+                        <div class="form-group">
+                            {{-- hidden beneficiary id --}}
+                            <input type="hidden" name="id" id="beneficiary_id">
+                            <label for="amount">Full Name</label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                                name="name" placeholder="Enter the Beneficiary Full Name" value="{{ old('name') }}">
+                            <small id="name" class="form-text text-muted">This should be the full name of a
+                                beneficiary</small>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -90,6 +143,17 @@
             @if ($errors->any())
                 $('#exampleModal').modal('show');
             @endif
+
+            $('.edit-beneficiary').click(function() {
+                // set the values to edit form
+                //find the input field
+                var beneficiary_id = $(this).data('id');
+                var beneficiary_name = $(this).data('name');
+
+                $('#edit-beneficiary-form').find('input[name="id"]').val(beneficiary_id);
+                $('#edit-beneficiary-form').find('input[name="name"]').val(beneficiary_name);
+            });
+
         });
     </script>
 @endpush

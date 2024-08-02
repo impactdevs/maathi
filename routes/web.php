@@ -21,8 +21,18 @@ Route::get('/funds-disbursement', [DistributionController::class, 'fundsdisburse
 Route::post('/disburse-funds', [DistributionController::class, 'disburseFunds'])->middleware('auth')->name('disburse-funds');
 Route::get('/payout-management', [DistributionController::class, 'payoutmanagement'])->middleware('auth')->name('payout-management');
 Route::get('/accounts-management', [DistributionController::class, 'accountsmanagement'])->middleware('auth')->name('accounts-management');
+Route::post('delete-account', [DistributionController::class, 'deleteaccount'])->middleware('auth')->name('delete-account');
+Route::post('delete-beneficiary', [DistributionController::class, 'deletebeneficiary'])->middleware('auth')->name('delete-beneficiary');
 // add-account
 Route::post('/add-account', [DistributionController::class, 'addaccount'])->middleware('auth')->name('add-account');
+// edit account
+Route::post('/edit-account', [DistributionController::class, 'editaccount'])->middleware('auth')->name('edit-account');
+
+//edit beneficiary
+Route::post('/edit-beneficiary', [DistributionController::class, 'editbeneficiary'])->middleware('auth')->name('edit-beneficiary');
+
+// account-details
+Route::get('/account-details/{id}', [DistributionController::class, 'getaccountdetails'])->middleware('auth')->name('account-details');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

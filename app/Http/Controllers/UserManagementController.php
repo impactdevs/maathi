@@ -13,7 +13,7 @@ class UserManagementController extends Controller
     public function index()
     {
         //get all users except one logged in
-        $beneficiaries = DB::table('users')->where('id', '!=', auth()->id())->get();
+        $beneficiaries = DB::table('users')->where('id', '!=', auth()->id())->where('deleted_at', null)->get();
         return view('user-management.index', compact('beneficiaries'));
     }
 
