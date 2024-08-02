@@ -13,7 +13,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group sel-box">
                         <label for="lstBox1">Available Beneficiaries</label>
                         <select multiple="multiple" id="lstBox1" class="form-control form-select-lg">
                             @foreach ($beneficiaries as $beneficiary)
@@ -32,17 +32,42 @@
                 </div>
 
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group sel-box">
                         <label for="lstBox2">Selected Beneficiaries</label>
                         <select multiple="multiple" id="lstBox2" class="form-control"></select>
                     </div>
                     <div class="form-group" id="amountSection" style="display: none;">
-                        <label for="fundsAmount">Enter Amount for Each Selected Beneficiary:</label>
-                        <input type="text" id="fundsAmount" class="form-control mb-2" placeholder="Amount">
-                        <label for="reason">Reason for Disbursement:</label>
-                        <input type="text" id="reason" class="form-control mb-2" placeholder="Reason">
-                        <label for="disbursementDate">Disbursement Date:</label>
-                        <input type="date" id="disbursementDate" class="form-control mb-2">
+                        <div class="row">
+                            <div class="col">
+                                <label for="account_id">Disburse From:</label>
+                                {{-- a drop down showing all accounts --}}
+                                <select id="accountId" class="form-control mb-2" name="account_id">
+                                    @foreach ($accounts as $account)
+                                        <option value="{{ $account->id }}">{{ $account->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col">
+
+                                <label for="fundsAmount">Amount:</label>
+                                <input type="text" id="fundsAmount" class="form-control mb-2" placeholder="Amount">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <label for="reason">Reason:</label>
+                                <input type="text" id="reason" class="form-control mb-2" placeholder="Reason">
+                            </div>
+
+                            <div class="col">
+                                <label for="disbursementDate">Disbursement Date:</label>
+                                <input type="date" id="disbursementDate" class="form-control mb-2">
+                            </div>
+                        </div>
+
+
                         <button type="button" id="btnAddFunds" class="btn btn-success">Add Fund(s)</button>
                     </div>
                     <div class="form-group" id="saveSection" style="margin-top: 20px;">
@@ -56,7 +81,7 @@
 
 @push('scripts')
     <style>
-        select {
+        .sel-box select {
             height: 50vh !important;
         }
 
@@ -69,7 +94,13 @@
             function moveOptions(from, to) {
                 var selectedOpts = $(from + ' option:selected');
                 if (selectedOpts.length == 0) {
-                    alert("Nothing to move.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: "Nothing to move!",
+                        text: "Please select an item to move.",
+                        showConfirmButton: true,
+                        timer: 3000 // Close alert after 3 seconds
+                    });
                 }
                 $(to).append($(selectedOpts).clone());
                 $(selectedOpts).remove();
@@ -160,9 +191,7 @@
 
             $('#btnAddFunds').click(function(e) {
                 e.preventDefault();
-                if (!checkTotalAmount()) {
-                    return;
-                }
+                var accountId = $('#accountId').val();
                 var amount = $('#fundsAmount').val();
                 var reason = $('#reason').val();
                 var disbursementDate = $('#disbursementDate').val();
@@ -181,8 +210,10 @@
                     if (currentAmount) {
                         $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?/, 'UGx: ' + amount));
                     } else {
-                        $(this).text(optionText + ' - UGx: ' + amount + ' (Reason: ' + reason + ', Date: ' + disbursementDate + ')');
+                        $(this).text(optionText + ' - UGx: ' + amount + ' (Reason: ' + reason +
+                            ', Date: ' + disbursementDate + ')');
                     }
+                    $(this).data('accountId', accountId);
                     $(this).data('amount', amount);
                     $(this).data('reason', reason);
                     $(this).data('disbursementDate', disbursementDate);
@@ -191,6 +222,7 @@
                 updateTotalFunds(amount); // Reduce the total funds by the added amount
 
                 alert("Funds have been added to selected beneficiaries.");
+                $('accountId').val('');
                 $('#fundsAmount').val('');
                 $('#reason').val('');
                 $('#disbursementDate').val('');
@@ -206,6 +238,7 @@
                 var beneficiaries = [];
                 $('#lstBox2 option').each(function() {
                     beneficiaries.push({
+                        accountId: $(this).data('accountId'),
                         value: $(this).val(),
                         amount: $(this).data('amount'),
                         reason: $(this).data('reason'),
@@ -256,30 +289,13 @@
                 });
 
                 if (noAmount) {
-                    alert("Please add funds to all selected beneficiaries.");
-                    return false;
-                }
-
-                return true;
-            }
-
-            function checkTotalAmount() {
-                var totalAmount = 0;
-                $('#lstBox2 option').each(function() {
-                    var amount = $(this).data('amount');
-                    if (amount) {
-                        totalAmount += parseFloat(amount);
-                    }
-                });
-
-                var fundsAmount = $('#fundsAmount').val();
-
-                if (fundsAmount) {
-                    totalAmount += parseFloat(fundsAmount);
-                }
-
-                if (totalAmount > parseFloat($('#totalFunds').text().replace('UGx: ', ''))) {
-                    alert("The total amount being allocated is greater than the total funds.");
+                    Swal.fire({
+                        icon: 'error',
+                        title: "Missing!",
+                        text: "Please add an amount to all selected beneficiaries.",
+                        showConfirmButton: true,
+                        timer: 3000 // Close alert after 3 seconds
+                    });
                     return false;
                 }
 

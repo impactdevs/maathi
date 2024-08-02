@@ -50,12 +50,12 @@
                     <span>Beneficiaries Management</span></a>
             </li>
 
-            {{-- <!-- Nav Item - Tables -->
+            <!-- Nav Item - Tables -->
             <li class="nav-item">
-                <a class="nav-link" href="/reports">
+                <a class="nav-link" href="/accounts-management">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>Reports</span></a>
-            </li> --}}
+                    <span>Account Management</span></a>
+            </li>
 
         </ul>
         <!-- End of Sidebar -->

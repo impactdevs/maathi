@@ -21,8 +21,9 @@ class DistributionController extends Controller
      */
     public function topupfunds()
     {
-        $top_funds = DB::table('top_up_funds')->get();
-        return view('top-up-funds.index', compact('top_funds'));
+        $accounts = DB::table('accounts')->get();
+        $top_funds = DB::table('top_up_funds')->join('accounts', 'top_up_funds.account_id', '=', 'accounts.id')->get();
+        return view('top-up-funds.index', compact('top_funds', 'accounts'));
     }
 
     /**
@@ -32,9 +33,11 @@ class DistributionController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric',
+            'account_id' => 'required',
         ]);
 
         $save = DB::table('top_up_funds')->insert([
+            'account_id' => $request->account_id,
             'amount' => $request->amount,
             'description' => $request->description,
             'top_up_date' => $request->top_up_date,
@@ -55,10 +58,13 @@ class DistributionController extends Controller
     public function fundsdisbursement()
     {
         //get the total amount of funds in the system
-        $total_funds = (DB::table('top_up_funds')->sum('amount'))-(DB::table('funds_disbursement')->sum('amount'));
+        $total_funds = (DB::table('top_up_funds')->sum('amount')) - (DB::table('funds_disbursement')->sum('amount'));
         // get a list of all users except the authenticated user
         $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->get();
-        return view('funds-disbursement.index', compact('beneficiaries', 'total_funds'));
+
+        // accounts
+        $accounts = DB::table('accounts')->get();
+        return view('funds-disbursement.index', compact('beneficiaries', 'total_funds', 'accounts'));
     }
 
     /**
@@ -83,6 +89,7 @@ class DistributionController extends Controller
             }
 
             $insertData[] = [
+                'account_id' => $beneficiary['accountId'],
                 'user_id' => $beneficiary['value'],
                 'amount' => $beneficiary['amount'],
                 'description' => $beneficiary['reason'],
@@ -108,6 +115,42 @@ class DistributionController extends Controller
     {
         $payouts = DB::table('funds_disbursement')->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
         return view('payout-management.index', compact('payouts'));
+    }
+
+    /**
+     * accounts management
+     */
+    public function accountsmanagement()
+    {
+        //get accounts with their balances as the sum of top up funds minus the sum of funds disbursed
+        $accounts = DB::table('accounts')->get();
+        foreach ($accounts as $account) {
+            $account->balance = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount'));
+        }
+        return view('accounts-management.index', compact('accounts'));
+    }
+
+    /**
+     * Add account
+     */
+
+    public function addaccount(Request $request)
+    {
+        $request->validate([
+            'account_name' => 'required|string',
+        ]);
+
+        $save = DB::table('accounts')->insert([
+            'name' => $request->account_name,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (!$save) {
+            return redirect()->route('accounts-management')->with('error', 'Failed to add account');
+        }
+
+        return redirect()->route('accounts-management')->with('success', 'Account added successfully');
     }
 
 

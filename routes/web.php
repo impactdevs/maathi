@@ -20,6 +20,9 @@ Route::post('/add-beneficiary', [UserManagementController::class, 'addBeneficiar
 Route::get('/funds-disbursement', [DistributionController::class, 'fundsdisbursement'])->middleware('auth')->name('funds-disbursement.index');
 Route::post('/disburse-funds', [DistributionController::class, 'disburseFunds'])->middleware('auth')->name('disburse-funds');
 Route::get('/payout-management', [DistributionController::class, 'payoutmanagement'])->middleware('auth')->name('payout-management');
+Route::get('/accounts-management', [DistributionController::class, 'accountsmanagement'])->middleware('auth')->name('accounts-management');
+// add-account
+Route::post('/add-account', [DistributionController::class, 'addaccount'])->middleware('auth')->name('add-account');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
