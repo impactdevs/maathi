@@ -206,7 +206,7 @@ class DistributionController extends Controller
         $account = DB::table('accounts')->where('id', $id)->first();
         $account->balance = $balance;
         $account->top_ups = DB::table('top_up_funds')->where('account_id', $id)->orderBy('top_up_date', 'desc')->get();
-        $account->disbursements = DB::table('funds_disbursement')->where('account_id', $id)->orderBy('disbursement_date', 'desc')->get();
+        $account->disbursements = DB::table('funds_disbursement')->where('account_id', $id)->orderBy('disbursement_date', 'desc')->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
         if (!$account) {
             return response()->json(['error' => 'Account not found'], 404);
         }

@@ -18,6 +18,7 @@
                     <div class="list-group-item">
                         <h5 class="mb-1">Amount: {{ $disbursement->amount }}</h5>
                         <p class="mb-1">Description: {{ $disbursement->description }}</p>
+                        <p class="mb-1">Disbursed to: {{ $disbursement->name }}</p>
                         <small>Date: {{ $disbursement->disbursement_date }}</small>
                     </div>
                 @endforeach
