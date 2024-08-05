@@ -22,7 +22,8 @@ class DistributionController extends Controller
     public function topupfunds()
     {
         $accounts = DB::table('accounts')->where('deleted_at', null)->get();
-        $top_funds = DB::table('top_up_funds')->join('accounts', 'top_up_funds.account_id', '=', 'accounts.id')->get();
+        $top_funds = DB::table('top_up_funds')->join('accounts', 'top_up_funds.account_id', '=', 'accounts.id')
+        ->select('top_up_funds.*', 'accounts.name as name')->get();
         return view('top-up-funds.index', compact('top_funds', 'accounts'));
     }
 
@@ -61,6 +62,22 @@ class DistributionController extends Controller
         return redirect()->route('top-up-funds.index')->with('success', 'Funds added successfully');
     }
 
+    // un do add funds by deleting it permanently
+    public function deletefunds(Request $request)
+    {
+        $request->validate([
+            'top_up_id' => 'required',
+        ]);
+
+        $delete = DB::table('top_up_funds')->where('id', $request->top_up_id)->delete();
+
+        if (!$delete) {
+            return redirect()->back()->with('error', 'Failed to revert top up');
+        }
+
+        return redirect()->back()->with('success', 'Top up reverted');
+    }
+
     /**
      * funds disbursement index page
      */
@@ -75,6 +92,22 @@ class DistributionController extends Controller
         // accounts
         $accounts = DB::table('accounts')->where('deleted_at', null)->get();
         return view('funds-disbursement.index', compact('beneficiaries', 'total_funds_ugx', 'total_funds_usd', 'accounts'));
+    }
+
+    //un do disbursement by deleting it permanently
+    public function deletedisbursement(Request $request)
+    {
+        $request->validate([
+            'disbursement_id' => 'required',
+        ]);
+
+        $delete = DB::table('funds_disbursement')->where('id', $request->disbursement_id)->delete();
+
+        if (!$delete) {
+            return redirect()->back()->with('error', 'Failed to revert disbursement');
+        }
+
+        return redirect()->back()->with('success', 'Disbursement revert successfully');
     }
 
     /**

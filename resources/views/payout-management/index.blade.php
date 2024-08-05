@@ -22,6 +22,7 @@
                             <th>Amount(usd)</th>
                             <th>Reason</th>
                             <th>Disbursement Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,57 +35,20 @@
                                 <td>{{ number_format($payout->amount_usd) }}</td>
                                 <td>{{ $payout->description }}</td>
                                 <td>{{ $payout->disbursement_date }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <form method="POST" action="{{ route('delete-payout') }}">
+                                            @csrf
+                                            <input type="hidden" name="disbursement_id" value="{{ $payout->id }}">
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="event.preventDefault(); this.closest('form').submit();">Revert</button>
+                                        </form>
+                                    </div>
                             </tr>
                         @endforeach
 
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Top up Funds</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form action="/add-fund" method="POST">
-                    <div class="modal-body">
-                        @method('POST')
-                        @csrf
-                        <div class="form-group">
-                            <label for="amount">Amount</label>
-                            <input type="text" class="form-control @error('amount') is-invalid @enderror" id="amount"
-                                name="amount" placeholder="Enter the Top up Amount" value="{{ old('amount') }}">
-                            <small id="emailHelp" class="form-text text-muted">This should be the amount you want to top up
-                                in your records</small>
-                            @error('amount')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="desc">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="desc" rows="3"
-                                name="description">{{ old('description') }}</textarea>
-                            <small id="description" class="form-text text-muted">This should be a simple description of the
-                                fund you are topping up</small>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-
             </div>
         </div>
     </div>
@@ -100,12 +64,4 @@
 
     <!-- Page level custom scripts -->
     <script src="{{ asset('assets/js/demo/datatables-demo.js') }}"></script>
-
-    <script>
-        $(document).ready(function() {
-            @if ($errors->any())
-                $('#exampleModal').modal('show');
-            @endif
-        });
-    </script>
 @endpush

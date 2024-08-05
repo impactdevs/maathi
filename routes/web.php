@@ -33,6 +33,10 @@ Route::post('/edit-beneficiary', [DistributionController::class, 'editbeneficiar
 
 // account-details
 Route::get('/account-details/{id}', [DistributionController::class, 'getaccountdetails'])->middleware('auth')->name('account-details');
+
+//delete payout(disbursement)
+Route::post('delete-payout', [DistributionController::class, 'deletedisbursement'])->middleware('auth')->name('delete-payout');
+Route::post('delete-top-up', [DistributionController::class, 'deletefunds'])->middleware('auth')->name('delete-top-up');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

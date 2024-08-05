@@ -24,6 +24,7 @@
                             <th>Top Up Amount(usd)</th>
                             <th>Description</th>
                             <th>Top Up Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,6 +36,15 @@
                                 <td>${{ number_format($top_fund->amount_usd, 2) }}</td>
                                 <td>{{ $top_fund->description }}</td>
                                 <td>{{ $top_fund->top_up_date }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <form method="POST" action="{{ route('delete-top-up') }}">
+                                            @csrf
+                                            <input type="hidden" name="top_up_id" value="{{ $top_fund->id }}">
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="event.preventDefault(); this.closest('form').submit();">Revert</button>
+                                        </form>
+                                    </div>
                             </tr>
                         @endforeach
                     </tbody>
