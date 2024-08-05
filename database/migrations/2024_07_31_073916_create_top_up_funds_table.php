@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('top_up_funds', function (Blueprint $table) {
             $table->id();
-            $table->string('amount');
+            $table->string('amount_ugx')->nullable();
+            $table->string('amount_usd')->nullable();
             $table->string('description')->nullable();
             $table->string('top_up_date')->nullable();
             $table->unsignedBigInteger('account_id')->nullable();

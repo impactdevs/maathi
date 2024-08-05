@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('funds_disbursement', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->string('amount');
+            $table->string('amount_ugx')->nullable();
+            $table->string('amount_usd')->nullable();
             $table->text('description')->nullable();
             $table->string('disbursement_date')->nullable();
             $table->unsignedBigInteger('account_id')->nullable();

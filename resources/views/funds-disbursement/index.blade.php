@@ -8,7 +8,8 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Disbursed funds (The current balance is: UGx: <span
-                    id="totalFunds">{{ $total_funds }}</span>)</h6>
+                    id="totalFunds">{{ number_format($total_funds_ugx, 0, 2) }}/=,
+                    ${{ number_format($total_funds_usd, 0, 2) }}</span>)</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -49,7 +50,15 @@
                             </div>
 
                             <div class="col">
+                                <label for="account_id">Account Type:</label>
+                                {{-- a drop down showing all accounts --}}
+                                <select id="accountType" class="form-control mb-2" name="account_type">
+                                    <option value="ugx">ugx</option>
+                                    <option value="usd">usd</option>
+                                </select>
+                            </div>
 
+                            <div class="col">
                                 <label for="fundsAmount">Amount:</label>
                                 <input type="text" id="fundsAmount" class="form-control mb-2" placeholder="Amount">
                             </div>
@@ -66,7 +75,6 @@
                                 <input type="date" id="disbursementDate" class="form-control mb-2">
                             </div>
                         </div>
-
 
                         <button type="button" id="btnAddFunds" class="btn btn-success">Add Fund(s)</button>
                     </div>
@@ -138,8 +146,8 @@
             function removeAllocatedFundsText() {
                 $('#lstBox1 option').each(function() {
                     var text = $(this).text();
-                    // Remove the " - UGx: [amount]" part if it exists
-                    var newText = text.replace(/ - UGx: \d+(\.\d{1,2})?/, '').trim();
+                    // Remove everything from " - UGx: " or " - $: " to the end of the string
+                    var newText = text.replace(/ - (UGx|\$): .*$/, '').trim();
                     $(this).text(newText);
                     $(this).removeData('amount');
                 });
@@ -166,7 +174,7 @@
                         updateTotalFunds(amount, false);
                         $(this).remove();
                         $('#lstBox1').append($(this).clone().text($(this).text().replace(
-                            / - UGx: \d+(\.\d{1,2})?/, '').trim()));
+                            / - (UGx|\$): .*$/, '').trim()));
                     });
                     checkSelectedUsers();
                 }
@@ -183,7 +191,7 @@
                         updateTotalFunds(amount, false);
                         $(this).remove();
                         $('#lstBox1').append($(this).clone().text($(this).text().replace(
-                            / - UGx: \d+(\.\d{1,2})?/, '').trim()));
+                            / - (UGx|\$): .*$/, '').trim()));
                     });
                     checkSelectedUsers();
                 }
@@ -195,6 +203,7 @@
                 var amount = $('#fundsAmount').val();
                 var reason = $('#reason').val();
                 var disbursementDate = $('#disbursementDate').val();
+                var accountType = $('#accountType').val();
                 if (isNaN(amount) || amount <= 0) {
                     alert("Please enter a valid amount.");
                     return;
@@ -208,21 +217,22 @@
                     var optionText = $(this).text();
                     var currentAmount = $(this).data('amount');
                     if (currentAmount) {
-                        $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?/, 'UGx: ' + amount));
+                        $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?|\\$:\d+(\.\d{1,2})?/, accountType.toUpperCase() + ': ' + amount));
                     } else {
-                        $(this).text(optionText + ' - UGx: ' + amount + ' (Reason: ' + reason +
+                        $(this).text(optionText + ' - ' + (accountType === 'usd' ? '$' : 'UGx') + ': ' + amount + ' (Reason: ' + reason +
                             ', Date: ' + disbursementDate + ')');
                     }
                     $(this).data('accountId', accountId);
                     $(this).data('amount', amount);
                     $(this).data('reason', reason);
                     $(this).data('disbursementDate', disbursementDate);
+                    $(this).data('accountType', accountType);
                 });
 
                 updateTotalFunds(amount); // Reduce the total funds by the added amount
 
                 alert("Funds have been added to selected beneficiaries.");
-                $('accountId').val('');
+                $('#accountId').val('');
                 $('#fundsAmount').val('');
                 $('#reason').val('');
                 $('#disbursementDate').val('');
@@ -242,13 +252,14 @@
                         value: $(this).val(),
                         amount: $(this).data('amount'),
                         reason: $(this).data('reason'),
-                        disbursementDate: $(this).data('disbursementDate')
+                        disbursementDate: $(this).data('disbursementDate'),
+                        accountType: $(this).data('accountType')
                     });
                 });
 
                 console.log("Saving the following beneficiaries:", beneficiaries);
 
-                //disburse funds
+                // Disburse funds
                 $.ajax({
                     url: "{{ route('disburse-funds') }}",
                     type: "POST",
@@ -261,11 +272,11 @@
                     success: function(response) {
                         console.log("Response:", response);
                     },
-
                     error: function(xhr, status, error) {
                         console.error("Error:", error);
                     }
                 });
+
                 // After saving, clear listbox2 and reset total funds
                 var totalAmount = 0;
                 $('#lstBox2 option').each(function() {
@@ -310,3 +321,4 @@
         });
     </script>
 @endpush
+

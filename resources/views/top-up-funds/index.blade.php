@@ -20,7 +20,8 @@
                         <tr>
                             <th>#</th>
                             <th>Account Name</th>
-                            <th>Top Up Amount</th>
+                            <th>Top Up Amount(ugx)</th>
+                            <th>Top Up Amount(usd)</th>
                             <th>Description</th>
                             <th>Top Up Date</th>
                         </tr>
@@ -30,7 +31,8 @@
                             <tr>
                                 <td>{{ $top_fund->id }}</td>
                                 <td>{{ $top_fund->name }}</td>
-                                <td>{{ number_format($top_fund->amount) }}/=</td>
+                                <td>{{ number_format($top_fund->amount_ugx) }}/=</td>
+                                <td>${{ number_format($top_fund->amount_usd, 2) }}</td>
                                 <td>{{ $top_fund->description }}</td>
                                 <td>{{ $top_fund->top_up_date }}</td>
                             </tr>
@@ -58,8 +60,9 @@
                         @csrf
                         {{-- Drop down with accounts(to select one) --}}
                         <div class="form-group">
-                            <label for="account">Account</label>
-                            <select class="form-control @error('account_id') is-invalid @enderror" id="account"
+                            <ol>
+                            <label for="account"><li>Account</li></label>
+                            <select class="form-control shadow-none @error('account_id') is-invalid @enderror" id="account"
                                 name="account_id">
                                 <option value="">Select an Account</option>
                                 @foreach ($accounts as $account)
@@ -71,8 +74,20 @@
                             @error('account_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+
                             <div class="form-group">
-                                <label for="amount">Amount</label>
+                                <label for="account_type"><li>Account Type</li></label>
+                                <div class="btn-group-custom d-flex justify-content-between">
+                                    <input type="radio" class="btn-check" name="account_type" id="ugx" autocomplete="off" value="ugx" checked>
+                                    <label class="btn btn-outline-primary px-5" for="ugx">ugx</label>
+
+                                    <input type="radio" class="btn-check" name="account_type" id="usd" autocomplete="off" value="usd">
+                                    <label class="btn btn-outline-primary px-5" for="usd">usd</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="amount"><li>Amount</li></label>
                                 <input type="text" class="form-control @error('amount') is-invalid @enderror"
                                     id="amount" name="amount" placeholder="Enter the Top up Amount"
                                     value="{{ old('amount') }}">
@@ -84,8 +99,8 @@
                                 @enderror
                             </div>
                             <div class="form-group">
-                                <label for="desc">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" id="desc" rows="3"
+                                <label for="desc"><li>Description</li></label>
+                                <textarea class="form-control shadow-none @error('description') is-invalid @enderror" id="desc" rows="3"
                                     name="description">{{ old('description') }}</textarea>
                                 <small id="description" class="form-text text-muted">This should be a simple description of
                                     the
@@ -95,13 +110,14 @@
                                 @enderror
                             </div>
                             <div class="form-group">
-                                <label for="topUpDate">Top Up Date</label>
-                                <input type="date" class="form-control @error('top_up_date') is-invalid @enderror"
+                                <label for="topUpDate"><li>Top Up Date</li></label>
+                                <input type="date" class="form-control shadow-none @error('top_up_date') is-invalid @enderror"
                                     id="topUpDate" name="top_up_date" value="{{ old('top_up_date') }}">
                                 @error('top_up_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            </ul>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

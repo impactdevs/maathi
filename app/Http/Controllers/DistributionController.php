@@ -31,14 +31,23 @@ class DistributionController extends Controller
      */
     public function addfunds(Request $request)
     {
+
         $request->validate([
             'amount' => 'required|numeric',
             'account_id' => 'required',
         ]);
 
+        // if the account_type is usd, set amount_usd to the amount
+        if ($request->account_type == 'usd') {
+            $request->amount_usd = $request->amount;
+        } else {
+            $request->amount_ugx = $request->amount;
+        }
+
         $save = DB::table('top_up_funds')->insert([
             'account_id' => $request->account_id,
-            'amount' => $request->amount,
+            'amount_ugx' => $request->amount_ugx,
+            'amount_usd' => $request->amount_usd,
             'description' => $request->description,
             'top_up_date' => $request->top_up_date,
             'created_at' => now(),
@@ -58,13 +67,14 @@ class DistributionController extends Controller
     public function fundsdisbursement()
     {
         //get the total amount of funds in the system
-        $total_funds = (DB::table('top_up_funds')->sum('amount')) - (DB::table('funds_disbursement')->sum('amount'));
+        $total_funds_ugx = (DB::table('top_up_funds')->sum('amount_ugx')) - (DB::table('funds_disbursement')->sum('amount_ugx'));
+        $total_funds_usd = (DB::table('top_up_funds')->sum('amount_usd')) - (DB::table('funds_disbursement')->sum('amount_usd'));
         // get a list of all users except the authenticated user
         $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->where('deleted_at', null)->get();
 
         // accounts
         $accounts = DB::table('accounts')->get();
-        return view('funds-disbursement.index', compact('beneficiaries', 'total_funds', 'accounts'));
+        return view('funds-disbursement.index', compact('beneficiaries', 'total_funds_ugx', 'total_funds_usd', 'accounts'));
     }
 
     /**
@@ -88,10 +98,18 @@ class DistributionController extends Controller
                 return redirect()->route('funds-disbursement.index')->with('error', 'Invalid beneficiary data');
             }
 
+            //if account type is usd, set amount_usd to the amount
+            if ($beneficiary['accountType'] == 'usd') {
+                $beneficiary['amount_usd'] = $beneficiary['amount'];
+            } else {
+                $beneficiary['amount_ugx'] = $beneficiary['amount'];
+            }
+
             $insertData[] = [
                 'account_id' => $beneficiary['accountId'],
                 'user_id' => $beneficiary['value'],
-                'amount' => $beneficiary['amount'],
+                'amount_ugx' => $beneficiary['amount_ugx']??null,
+                'amount_usd' => $beneficiary['amount_usd']??null,
                 'description' => $beneficiary['reason'],
                 'disbursement_date' => $beneficiary['disbursementDate'],
                 'created_at' => now(),
@@ -131,7 +149,8 @@ class DistributionController extends Controller
         //get accounts exluding trashed with their balances as the sum of top up funds minus the sum of funds disbursed each account
         $accounts = DB::table('accounts')->whereNull('deleted_at')->get();
         foreach ($accounts as $account) {
-            $account->balance = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount'));
+            $account->balance_ugx = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_ugx')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_ugx'));
+            $account->balance_usd = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_usd')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_usd'));
         }
         return view('accounts-management.index', compact('accounts'));
     }
@@ -202,9 +221,11 @@ class DistributionController extends Controller
     public function getaccountdetails($id)
     {
         // get the balance of the account
-        $balance = (DB::table('top_up_funds')->where('account_id', $id)->sum('amount')) - (DB::table('funds_disbursement')->where('account_id', $id)->sum('amount'));
+        $balance_ugx = (DB::table('top_up_funds')->where('account_id', $id)->sum('amount_ugx')) - (DB::table('funds_disbursement')->where('account_id', $id)->sum('amount_ugx'));
+        $balance_usd = (DB::table('top_up_funds')->where('account_id', $id)->sum('amount_usd')) - (DB::table('funds_disbursement')->where('account_id', $id)->sum('amount_usd'));
         $account = DB::table('accounts')->where('id', $id)->first();
-        $account->balance = $balance;
+        $account->balance_ugx = $balance_ugx;
+        $account->balance_usd = $balance_usd;
         $account->top_ups = DB::table('top_up_funds')->where('account_id', $id)->orderBy('top_up_date', 'desc')->get();
         $account->disbursements = DB::table('funds_disbursement')->where('account_id', $id)->orderBy('disbursement_date', 'desc')->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
         if (!$account) {

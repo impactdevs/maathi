@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Page Heading -->
-<h1 class="h3 mb-2 text-gray-800">{{$account->name}}'s Details({{ number_format($account->balance)}}/=)</h1>
+<h1 class="h3 mb-2 text-gray-800">{{$account->name}}'s Details({{ number_format($account->balance_ugx)}}/=, ${{ number_format($account->balance_usd) }})</h1>
 
 <!-- Disbursements Section -->
 <div class="card shadow mb-4">
@@ -16,7 +16,7 @@
             <div class="list-group">
                 @foreach ($account->disbursements as $disbursement)
                     <div class="list-group-item">
-                        <h5 class="mb-1">Amount: {{ $disbursement->amount }}</h5>
+                        <h5 class="mb-1">Amount: {{ number_format($disbursement->amount_ugx)??0 }}/=, ${{ number_format($disbursement->amount_usd, 2)??0 }}</h5>
                         <p class="mb-1">Description: {{ $disbursement->description }}</p>
                         <p class="mb-1">Disbursed to: {{ $disbursement->name }}</p>
                         <small>Date: {{ $disbursement->disbursement_date }}</small>
@@ -39,7 +39,7 @@
             <div class="list-group">
                 @foreach ($account->top_ups as $top_up)
                     <div class="list-group-item">
-                        <h5 class="mb-1">Amount: {{ $top_up->amount }}</h5>
+                        <h5 class="mb-1">Amount: {{ number_format($top_up->amount_ugx)??0 }}/=, ${{ number_format($top_up->amount_usd, 2)??0 }}</h5>
                         <p class="mb-1">Description: {{ $top_up->description }}</p>
                         <small>Date: {{ $top_up->top_up_date }}</small>
                     </div>

@@ -20,7 +20,8 @@
                         <tr>
                             <th>#</th>
                             <th>Full Name</th>
-                            <th>Balance</th>
+                            <th>Balance(ugx)</th>
+                            <th>Balance(usd)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -29,7 +30,8 @@
                             <tr>
                                 <td>{{ $account->id }}</td>
                                 <td><a href="{{ route('account-details', $account->id) }}">{{ $account->name }}</a></td>
-                                <td>{{ number_format($account->balance ?? 0) }}/=</td>
+                                <td>{{ number_format($account->balance_ugx ?? 0) }}/=</td>
+                                <td>${{ number_format($account->balance_usd ?? 0, 2) }}</td>
                                 <td>
                                     <div style="display: flex; gap: 5px;">
                                         <button type="button" class="btn btn-primary edit-account" data-toggle="modal" data-target="#edit-account" data-id="{{ $account->id }}" data-name="{{ $account->name }}">
@@ -58,7 +60,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Top up Funds</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Create Account</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -95,7 +97,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Top up Funds</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Create Account</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
