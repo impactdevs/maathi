@@ -73,7 +73,7 @@ class DistributionController extends Controller
         $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->where('deleted_at', null)->get();
 
         // accounts
-        $accounts = DB::table('accounts')->get();
+        $accounts = DB::table('accounts')->where('deleted_at', null)->get();
         return view('funds-disbursement.index', compact('beneficiaries', 'total_funds_ugx', 'total_funds_usd', 'accounts'));
     }
 
