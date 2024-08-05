@@ -165,7 +165,8 @@ class DistributionController extends Controller
     public function payoutmanagement()
     {
         $payouts = DB::table('funds_disbursement')
-            ->join('users', 'funds_disbursement.user_id', '=', 'users.id')->get();
+            ->join('users', 'funds_disbursement.user_id', '=', 'users.id')
+            ->select('funds_disbursement.*', 'users.name as name')->get();
 
         //add account name to the payout data
         foreach ($payouts as $payout) {
