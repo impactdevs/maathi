@@ -72,7 +72,7 @@
                         <div class="form-group">
                             <ol>
                             <label for="account"><li>Account</li></label>
-                            <select class="form-control shadow-none @error('account_id') is-invalid @enderror" id="account"
+                            <select data-live-search="true" class="selectpicker form-control shadow-none @error('account_id') is-invalid @enderror" id="account"
                                 name="account_id">
                                 <option value="">Select an Account</option>
                                 @foreach ($accounts as $account)
@@ -150,7 +150,8 @@
 
     <!-- Page level custom scripts -->
     <script src="{{ asset('assets/js/demo/datatables-demo.js') }}"></script>
-
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
     <script>
         $(document).ready(function() {
             @if ($errors->any())

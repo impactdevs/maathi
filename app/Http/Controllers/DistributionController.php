@@ -23,7 +23,7 @@ class DistributionController extends Controller
     {
         $accounts = DB::table('accounts')->where('deleted_at', null)->get();
         $top_funds = DB::table('top_up_funds')->join('accounts', 'top_up_funds.account_id', '=', 'accounts.id')
-        ->select('top_up_funds.*', 'accounts.name as name')->get();
+            ->select('top_up_funds.*', 'accounts.name as name')->get();
         return view('top-up-funds.index', compact('top_funds', 'accounts'));
     }
 
@@ -141,8 +141,8 @@ class DistributionController extends Controller
             $insertData[] = [
                 'account_id' => $beneficiary['accountId'],
                 'user_id' => $beneficiary['value'],
-                'amount_ugx' => $beneficiary['amount_ugx']??null,
-                'amount_usd' => $beneficiary['amount_usd']??null,
+                'amount_ugx' => $beneficiary['amount_ugx'] ?? null,
+                'amount_usd' => $beneficiary['amount_usd'] ?? null,
                 'description' => $beneficiary['reason'],
                 'disbursement_date' => $beneficiary['disbursementDate'],
                 'created_at' => now(),
@@ -293,11 +293,20 @@ class DistributionController extends Controller
         $request->validate([
             'id' => 'required',
         ]);
+        if ($request->account_type == 'cash_out') {
+            $update = DB::table('users')->where('id', $request->id)->update([
+                'name' => $request->name,
+                'beneficiary_type' => 'cash_out',
+                'updated_at' => now(),
+            ]);
+        } else {
+            $update = DB::table('users')->where('id', $request->id)->update([
+                'name' => $request->name,
+                'beneficiary_type' => 'client',
+                'updated_at' => now(),
+            ]);
+        }
 
-        $update = DB::table('users')->where('id', $request->id)->update([
-            'name' => $request->name,
-            'updated_at' => now(),
-        ]);
 
         if (!$update) {
             return redirect()->back()->with('error', 'Failed to update beneficiary');
@@ -306,52 +315,41 @@ class DistributionController extends Controller
         return redirect()->back()->with('success', 'Beneficiary updated successfully');
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function stabilizeEveryAccount()
     {
-        //
-    }
+        $disburse_to = request()->disburse_to_id;
+        $accounts = DB::table('accounts')->where('deleted_at', null)->get();
+        foreach ($accounts as $account) {
+            $account->balance_ugx = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_ugx')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_ugx'));
+            $account->balance_usd = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_usd')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_usd'));
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+            if ($account->balance_ugx > 0) {
+                //insert the data to be disbursed
+                $disburse = DB::table('funds_disbursement')->insert([
+                    'account_id' => $account->id,
+                    'user_id' => $disburse_to,
+                    'amount_ugx' => $account->balance_ugx,
+                    'description' => 'Stabilization of account',
+                    'disbursement_date' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Distribution $distribution)
-    {
-        //
-    }
+            if ($account->balance_usd > 0) {
+                //insert the data to be disbursed
+                $disburse = DB::table('funds_disbursement')->insert([
+                    'account_id' => $account->id,
+                    'user_id' => $disburse_to,
+                    'amount_usd' => $account->balance_usd,
+                    'description' => 'Stabilization of account',
+                    'disbursement_date' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Distribution $distribution)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Distribution $distribution)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Distribution $distribution)
-    {
-        //
+        }
+        return response()->json(["success" => true, "message" => "Accounts stabilized successfully"]);
     }
 }

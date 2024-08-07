@@ -18,7 +18,7 @@
                         <label for="lstBox1">Available Beneficiaries</label>
                         <select multiple="multiple" id="lstBox1" class="form-control form-select-lg">
                             @foreach ($beneficiaries as $beneficiary)
-                                <option value="{{ $beneficiary->id }}">{{ $beneficiary->id . '.' . $beneficiary->name }}
+                                <option value="{{ $beneficiary->id }}" class="@if($beneficiary->beneficiary_type=='cash_out') text-warning  @endif">{{ $beneficiary->id . '.' . $beneficiary->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -155,6 +155,7 @@
 
             $('#btnRight').click(function(e) {
                 e.preventDefault();
+                //if the e
                 moveOptions('#lstBox1', '#lstBox2');
             });
 
@@ -217,9 +218,11 @@
                     var optionText = $(this).text();
                     var currentAmount = $(this).data('amount');
                     if (currentAmount) {
-                        $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?|\\$:\d+(\.\d{1,2})?/, accountType.toUpperCase() + ': ' + amount));
+                        $(this).text(optionText.replace(/UGx: \d+(\.\d{1,2})?|\\$:\d+(\.\d{1,2})?/,
+                            accountType.toUpperCase() + ': ' + amount));
                     } else {
-                        $(this).text(optionText + ' - ' + (accountType === 'usd' ? '$' : 'UGx') + ': ' + amount + ' (Reason: ' + reason +
+                        $(this).text(optionText + ' - ' + (accountType === 'usd' ? '$' : 'UGx') +
+                            ': ' + amount + ' (Reason: ' + reason +
                             ', Date: ' + disbursementDate + ')');
                     }
                     $(this).data('accountId', accountId);
@@ -318,7 +321,44 @@
             // Set the default value of the disbursement date to today
             var today = new Date().toISOString().split('T')[0];
             $('#disbursementDate').val(today);
+
+            //check if cash out is selected
+            $('#lstBox1').change(function() {
+                var selected = $('#lstBox1 option:selected');
+                selected.each(function() {
+                    if ($(this).hasClass('text-warning')) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: "Warning!",
+                            text: "You are about to disburse funds to a cash out beneficiary.",
+                            showCancelButton: true,
+                            confirmButtonText: "Disburse",
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                //send a stabilisation request
+                                $.ajax({
+                                    url: "{{ route('stabilize') }}",
+                                    type: "POST",
+                                    headers: {
+                                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                    },
+                                    data: {
+                                        disburse_to_id: $(this).val()
+                                    },
+                                    success: function(response) {
+                                        console.log("Response:", response);
+                                    },
+                                    error: function(xhr, status, error) {
+                                        console.error("Error:", error);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endpush
-

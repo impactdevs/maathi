@@ -27,12 +27,20 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $save = DB::table('users')->insert([
-            'name' => $request->name,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
+        if ($request->account_type == 'cash_out') {
+            $save = DB::table('users')->insert([
+                'name' => $request->name,
+                'beneficiary_type' => $request->account_type,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $save = DB::table('users')->insert([
+                'name' => $request->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
         if (!$save) {
             return redirect()->route('user-management.index')->with('error', 'Failed to add beneficiary');
         }

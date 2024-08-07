@@ -28,6 +28,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+
 </head>
 
 <body id="page-top">
@@ -130,7 +133,6 @@
 
     <!-- Core plugin JavaScript-->
     <script src="{{ asset('assets/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
     <!-- Custom scripts for all pages-->
     <script src="{{ asset('assets/js/sb-admin-2.min.js') }}"></script>
 
