@@ -110,6 +110,22 @@ class DistributionController extends Controller
         return redirect()->back()->with('success', 'Disbursement revert successfully');
     }
 
+        //un do disbursement by deleting it permanently
+        public function deletecashout(Request $request)
+        {
+            $request->validate([
+                'cashout_id' => 'required',
+            ]);
+
+            $delete = DB::table('cash_outs')->where('id', $request->cashout_id)->delete();
+
+            if (!$delete) {
+                return redirect()->back()->with('error', 'Failed to revert cash out');
+            }
+
+            return redirect()->back()->with('success', 'Cash out reverted');
+        }
+
     /**
      * Disburse funds
      */
@@ -173,6 +189,13 @@ class DistributionController extends Controller
             $payout->account_name = DB::table('accounts')->where('id', $payout->account_id)->value('name');
         }
         return view('payout-management.index', compact('payouts'));
+    }
+
+    // payout management
+    public function cashoutmanagement()
+    {
+        $cashouts = DB::table('cash_outs')->get();
+        return view('cashout-management.index', compact('cashouts'));
     }
 
     /**
@@ -315,41 +338,50 @@ class DistributionController extends Controller
         return redirect()->back()->with('success', 'Beneficiary updated successfully');
     }
 
-    public function stabilizeEveryAccount()
+    public function cashOut(Request $request)
     {
-        $disburse_to = request()->disburse_to_id;
-        $accounts = DB::table('accounts')->where('deleted_at', null)->get();
-        foreach ($accounts as $account) {
-            $account->balance_ugx = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_ugx')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_ugx'));
-            $account->balance_usd = (DB::table('top_up_funds')->where('account_id', $account->id)->sum('amount_usd')) - (DB::table('funds_disbursement')->where('account_id', $account->id)->sum('amount_usd'));
+        // Get the beneficiaries data from the request
+        $beneficiaries = $request->input('beneficiaries');
 
-            if ($account->balance_ugx > 0) {
-                //insert the data to be disbursed
-                $disburse = DB::table('funds_disbursement')->insert([
-                    'account_id' => $account->id,
-                    'user_id' => $disburse_to,
-                    'amount_ugx' => $account->balance_ugx,
-                    'description' => 'Stabilization of account',
-                    'disbursement_date' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            if ($account->balance_usd > 0) {
-                //insert the data to be disbursed
-                $disburse = DB::table('funds_disbursement')->insert([
-                    'account_id' => $account->id,
-                    'user_id' => $disburse_to,
-                    'amount_usd' => $account->balance_usd,
-                    'description' => 'Stabilization of account',
-                    'disbursement_date' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
+        // Ensure $beneficiaries is an array
+        if (!is_array($beneficiaries)) {
+            return redirect()->route('funds-disbursement.index')->with('error', 'Invalid beneficiaries data');
         }
-        return response()->json(["success" => true, "message" => "Accounts stabilized successfully"]);
+
+        // Validate and prepare data for insertion
+        $insertData = [];
+        foreach ($beneficiaries as $beneficiary) {
+            // Ensure each beneficiary has the required fields
+            if (!isset($beneficiary['value']) || !isset($beneficiary['amount'])) {
+                return redirect()->route('funds-disbursement.index')->with('error', 'Invalid beneficiary data');
+            }
+
+            //if account type is usd, set amount_usd to the amount
+            if ($beneficiary['accountType'] == 'usd') {
+                $beneficiary['amount_usd'] = $beneficiary['amount'];
+            } else {
+                $beneficiary['amount_ugx'] = $beneficiary['amount'];
+            }
+
+            $insertData[] = [
+                'user_id' => $beneficiary['value'],
+                'amount_ugx' => $beneficiary['amount_ugx'] ?? null,
+                'amount_usd' => $beneficiary['amount_usd'] ?? null,
+                'description' => $beneficiary['reason'],
+                'disbursement_date' => $beneficiary['disbursementDate'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        // Insert the data into the cash_outs table
+        $save = DB::table('cash_outs')->insert($insertData);
+
+        // Check if the insertion was successful
+        if (!$save) {
+            return redirect()->route('funds-disbursement.index')->with('error', 'Failed to disburse funds');
+        }
+
+        return redirect()->route('funds-disbursement.index')->with('success', 'Funds disbursed successfully');
     }
 }

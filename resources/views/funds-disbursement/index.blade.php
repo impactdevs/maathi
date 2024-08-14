@@ -18,7 +18,9 @@
                         <label for="lstBox1">Available Beneficiaries</label>
                         <select multiple="multiple" id="lstBox1" class="form-control form-select-lg">
                             @foreach ($beneficiaries as $beneficiary)
-                                <option value="{{ $beneficiary->id }}" class="@if($beneficiary->beneficiary_type=='cash_out') text-warning  @endif">{{ $beneficiary->id . '.' . $beneficiary->name }}
+                                <option value="{{ $beneficiary->id }}"
+                                    class="@if ($beneficiary->beneficiary_type == 'cash_out') text-warning @endif">
+                                    {{ $beneficiary->id . '.' . $beneficiary->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -39,7 +41,7 @@
                     </div>
                     <div class="form-group" id="amountSection" style="display: none;">
                         <div class="row">
-                            <div class="col">
+                            <div class="col" id="disburseFrom">
                                 <label for="account_id">Disburse From:</label>
                                 {{-- a drop down showing all accounts --}}
                                 <select id="accountId" class="form-control mb-2" name="account_id">
@@ -99,6 +101,12 @@
     </style>
     <script>
         $(document).ready(function() {
+            //determne f its a checkout
+            var isCashOutSelected = false;
+
+            // Set the default value of the disbursement date to today
+            var today = new Date().toISOString().split('T')[0];
+
             function moveOptions(from, to) {
                 var selectedOpts = $(from + ' option:selected');
                 if (selectedOpts.length == 0) {
@@ -262,30 +270,53 @@
 
                 console.log("Saving the following beneficiaries:", beneficiaries);
 
-                // Disburse funds
-                $.ajax({
-                    url: "{{ route('disburse-funds') }}",
-                    type: "POST",
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        beneficiaries: beneficiaries
-                    },
-                    success: function(response) {
-                        console.log("Response:", response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", error);
-                    }
-                });
 
-                // After saving, clear listbox2 and reset total funds
-                var totalAmount = 0;
-                $('#lstBox2 option').each(function() {
-                    totalAmount += parseFloat($(this).data('amount')) || 0;
-                });
-                updateTotalFunds(totalAmount, false); // Add back the total funds of saved allocations
+                console.log("Is cash out selected?", isCashOutSelected);
+
+                if (isCashOutSelected) {
+                    // Disburse funds to cash out
+                    $.ajax({
+                        url: "{{ route('cash-out') }}",
+                        type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: {
+                            beneficiaries: beneficiaries
+                        },
+                        success: function(response) {
+                            console.log("Response:", response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
+                        }
+                    });
+                } else {
+                    // Disburse funds
+                    $.ajax({
+                        url: "{{ route('disburse-funds') }}",
+                        type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: {
+                            beneficiaries: beneficiaries
+                        },
+                        success: function(response) {
+                            console.log("Response:", response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
+                        }
+                    });
+
+                    // After saving, clear listbox2 and reset total funds
+                    var totalAmount = 0;
+                    $('#lstBox2 option').each(function() {
+                        totalAmount += parseFloat($(this).data('amount')) || 0;
+                    });
+                    // updateTotalFunds(totalAmount, false); // Add back the total funds of saved allocations
+                }
 
                 alert("Data saved successfully.");
 
@@ -318,44 +349,32 @@
 
             $('#lstBox2').change(checkSelectedUsers);
 
-            // Set the default value of the disbursement date to today
-            var today = new Date().toISOString().split('T')[0];
+
             $('#disbursementDate').val(today);
 
             //check if cash out is selected
-            $('#lstBox1').change(function() {
-                var selected = $('#lstBox1 option:selected');
+
+            $('#lstBox2').change(function() {
+                var selected = $('#lstBox2 option:selected');
                 selected.each(function() {
                     if ($(this).hasClass('text-warning')) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: "Warning!",
-                            text: "You are about to disburse funds to a cash out beneficiary.",
-                            showCancelButton: true,
-                            confirmButtonText: "Disburse",
-                            confirmButtonColor: "#3085d6",
-                            cancelButtonColor: "#d33",
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                //send a stabilisation request
-                                $.ajax({
-                                    url: "{{ route('stabilize') }}",
-                                    type: "POST",
-                                    headers: {
-                                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                                    },
-                                    data: {
-                                        disburse_to_id: $(this).val()
-                                    },
-                                    success: function(response) {
-                                        console.log("Response:", response);
-                                    },
-                                    error: function(xhr, status, error) {
-                                        console.error("Error:", error);
-                                    }
-                                });
+                        //hide disburse from: field
+                        $('#disburseFrom').hide();
+
+                        //stop all other options from beiing selected
+                        $('#lstBox2 option').each(function() {
+                            if (!$(this).hasClass('text-warning')) {
+                                $(this).prop('selected', false);
                             }
                         });
+
+                        // set the isCashOutSelected to true
+                        isCashOutSelected = true;
+                    } else {
+                        $('#disburseFrom').show();
+
+                        // set the isCashOutSelected to false
+                        isCashOutSelected = false;
                     }
                 });
             });

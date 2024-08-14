@@ -4,11 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 
-use Illuminate\Database\Query\Expression;
-
 use Carbon\Carbon;
-
-
 
 class DashboardController extends Controller
 {
@@ -17,6 +13,10 @@ class DashboardController extends Controller
         //balance
         $balance_ugx = (DB::table('top_up_funds')->sum('amount_ugx')) - (DB::table('funds_disbursement')->sum('amount_ugx'));
         $balance_usd = (DB::table('top_up_funds')->sum('amount_usd')) - (DB::table('funds_disbursement')->sum('amount_usd'));
+
+        //this balance is from te cash out accounts
+        $balance_carried_forward_ugx = DB::table('top_up_funds')->sum('amount_ugx')-DB::table('cash_outs')->sum('amount_ugx');
+        $balance_carried_forward_usd = DB::table('top_up_funds')->sum('amount_usd')-DB::table('cash_outs')->sum('amount_usd');
 
         //total beneficiaries
         $beneficiaries = DB::table('users')->where('id', '!=', auth()->user()->id)->count();
@@ -33,7 +33,7 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::now()->startOfMonth()->format('Y-m-d');
         $endOfMonth = Carbon::now()->endOfMonth()->format('Y-m-d');
         //top up funds made this month
-// Retrieve the sum of the top up funds made this month
+        // Retrieve the sum of the top up funds made this month
         $top_funds_month_ugx = DB::table('top_up_funds')
             ->whereBetween('top_up_date', [$startOfMonth, $endOfMonth])
             ->sum('amount_ugx');
@@ -72,6 +72,8 @@ class DashboardController extends Controller
             compact(
                 'balance_ugx',
                 'balance_usd',
+                'balance_carried_forward_ugx',
+                'balance_carried_forward_usd',
                 'beneficiaries',
                 'total_disbursements_ugx',
                 'total_disbursements_usd',
