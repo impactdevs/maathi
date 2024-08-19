@@ -34,7 +34,7 @@
                                 <td>${{ number_format($account->balance_usd ?? 0, 2) }}</td>
                                 <td>
                                     <div style="display: flex; gap: 5px;">
-                                        <button type="button" class="btn btn-primary edit-account" data-toggle="modal" data-target="#edit-account" data-id="{{ $account->id }}" data-name="{{ $account->name }}">
+                                        <button type="button" class="btn btn-primary btn-sm edit-account" data-toggle="modal" data-target="#edit-account" data-id="{{ $account->id }}" data-name="{{ $account->name }}">
                                             Edit
                                         </button>
                                         <form method="POST" action="{{ route('delete-account') }}">

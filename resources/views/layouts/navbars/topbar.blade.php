@@ -20,7 +20,7 @@
                         </div>
                     </form> --}}
 
-                    <h6 class="text-nowrap">Hello, Welcome To Maathi System</h1>
+                    <h6 class="text-nowrap">Hello, Welcome To {{ config('app.name') }} System</h1>
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
